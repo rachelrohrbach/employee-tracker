@@ -1,0 +1,27 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rachelrohrbach/employee-tracker.git"
+  },
+  "keywords": [
+    "mysql"
+  ],
+  "author": "Rachel Rohrbach",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rachelrohrbach/employee-tracker/issues"
+  },
+  "homepage": "https://github.com/rachelrohrbach/employee-tracker#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^7.0.4"
+  }
+}
