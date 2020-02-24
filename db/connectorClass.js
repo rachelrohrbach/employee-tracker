@@ -19,6 +19,42 @@ class DB {
     );
   }
 
+  viewEmployeesByDepartment(id) {
+    return this.connection.query(
+      `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+      FROM employee
+      LEFT JOIN role 
+      ON employee.role_id = role.id
+      LEFT JOIN employee manager 
+      ON manager.id = employee.manager_id
+      LEFT JOIN department 
+      ON role.department_id = department.id 
+      WHERE department.id = ?;
+      `,
+      [id]
+    );
+  }
+
+  viewEmployeesByRole(id) {
+    return this.connection.query(
+      `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+      FROM employee
+      LEFT JOIN role 
+      ON employee.role_id = role.id
+      LEFT JOIN department 
+      ON role.department_id = department.id 
+      LEFT JOIN employee manager 
+      ON manager.id = employee.manager_id
+      WHERE role.id = ?;
+      `,
+      [id]
+    );
+  }
+
+  viewAllDepartments() {
+    return this.connection.query("SELECT * from department");
+  }
+
   viewAllRoles() {
     return this.connection.query(
       `SELECT role.id, role.title, role.salary, department.name AS department
@@ -26,10 +62,6 @@ class DB {
         LEFT JOIN department
         ON role.department_id = department.id;`
     );
-  }
-
-  viewAllDepartments() {
-    return this.connection.query("SELECT * from department");
   }
 
   addEmployee(first_name, last_name, role_id, manager_id) {
@@ -41,16 +73,16 @@ class DB {
     });
   }
 
+  addDepartment(department) {
+    return this.connection.query("INSERT INTO department SET ?", {
+      name: department
+    });
+  }
+
   addRole(role, salary) {
     return this.connection.query("INSERT INTO role SET ?", {
       title: role,
       salary: salary
-    });
-  }
-
-  addDepartment(department) {
-    return this.connection.query("INSERT INTO department SET ?", {
-      name: department
     });
   }
 
@@ -73,13 +105,23 @@ class DB {
     );
   }
 
-  // deleteEmployee() {
-  //   return this.connection.query(
-  //     "DELETE FROM employee SET ?", {
-  //       id: id
-  //     }
-  //   );
-  // }
+  deleteEmployee(id) {
+    return this.connection.query(
+      "DELETE FROM employee WHERE id = ?", [id]
+    );
+  }
+
+  deleteDepartment(id) {
+    return this.connection.query(
+      "DELETE FROM department WHERE id = ?", [id]
+    );
+  }
+
+  deleteRole(id) {
+    return this.connection.query(
+      "DELETE FROM role WHERE id = ?", [id]
+    );
+  }
 
   exit() {
     this.connection.end();
