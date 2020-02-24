@@ -124,7 +124,7 @@ class DB {
   }
 
   exit() {
-    this.connection.end();
+    return this.connection.end();
   }
 }
 
