@@ -34,7 +34,7 @@ This project is created with:
 
 
 # Credits
-I consulted my course GitLab repository, Stack Overflow (www.stackoverflow.com), W3Schools (https://www.w3schools.com/js/js_array_methods.asp), MDN Web Docs (https://developer.mozilla.org/en-US/docs/Web/API/Console/table), SQL Bolt (https://sqlbolt.com/lesson/select_queries_with_outer_joins) and MySQL Tutorial (https://www.mysqltutorial.org/mysql-nodejs/update/) in creating my project. 
+I consulted my course GitLab repository, Stack Overflow (www.stackoverflow.com), W3Schools (https://www.w3schools.com/js/js_array_methods.asp), MDN Web Docs (https://developer.mozilla.org/en-US/docs/Web/API/Console/table), SQL Bolt (https://sqlbolt.com/lesson/select_queries_with_outer_joins), Figlet (https://www.npmjs.com/package/figlet), and MySQL Tutorial (https://www.mysqltutorial.org/mysql-nodejs/update/) in creating my project. 
 
 ## License
 MIT License
