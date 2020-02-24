@@ -1,23 +1,22 @@
 "use strict";
 
-const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
-const db = require("./db/query");
+const db = require("./db/connectorClass");
 
 const promptMessages = {
-  viewEmployees: "View all employees",
-  // viewEmployeesByDepartment: "View all employees by department",
-  // viewEmployeesByRole: "View all employees by role",
-  addEmployee: "Add an employee",
-  updateEmployeeRole: "Update employee role",
-  viewRoles: "View all roles",
-  addRole: "Add a role",
-  viewDepartment: "View all deparments",
-  addDepartment: "Add a department",
-  // deleteEmployee: "Delete an employee",
-  // deleteRole: "Delete a role",
-  // deleteDepartment: "Delete a department",
+  viewEmployees: "View all Employees",
+  viewEmployeesByDepartment: "View all Employees by Department",
+  viewEmployeesByRole: "View all Employees by Role",
+  viewDepartment: "View all Departments",
+  viewRoles: "View all Roles",
+  addEmployee: "Add an Employee",
+  addDepartment: "Add a Department",
+  addRole: "Add a Role",
+  updateEmployeeRole: "Update Employee Role",
+  deleteEmployee: "Delete an Employee",
+  deleteRole: "Delete a Role",
+  deleteDepartment: "Delete a Department",
   exit: "Exit"
 };
 
@@ -30,23 +29,32 @@ async function prompt() {
       message: "What would you like to do?",
       choices: [
         promptMessages.viewEmployees,
-        promptMessages.addEmployee,
-        promptMessages.updateEmployeeRole,
-        promptMessages.viewRoles,
-        promptMessages.addRole,
+        promptMessages.viewEmployeesByDepartment,
+        promptMessages.viewEmployeesByRole,
         promptMessages.viewDepartment,
+        promptMessages.viewRoles,
+        promptMessages.addEmployee,
         promptMessages.addDepartment,
-        // promptMessages.deleteEmployee,
-        // promptMessages.deleteRole,
-        // promptMessages.deleteDepartment,
+        promptMessages.addRole,
+        promptMessages.updateEmployeeRole,
+        promptMessages.deleteEmployee,
+        promptMessages.deleteRole,
+        promptMessages.deleteDepartment,
         promptMessages.exit
       ]
     });
 
-    // console.log("answer", answer);
     switch (answer.action) {
       case promptMessages.viewEmployees:
-        viewAllEmployees();
+        await viewAllEmployees();
+        break;
+
+      case promptMessages.viewEmployeesByDepartment:
+        await viewEmployeesByDepartment();
+        break;
+
+      case promptMessages.viewEmployeesByRole:
+        await viewEmployeesByRole();
         break;
 
       case promptMessages.addEmployee:
@@ -73,6 +81,18 @@ async function prompt() {
         await addDepartment();
         break;
 
+      case promptMessages.deleteEmployee:
+        await deleteEmployee();
+        break;
+
+      case promptMessages.deleteRole:
+        await deleteRole();
+        break;
+
+      case promptMessages.deleteDepartment:
+        await deleteDepartment();
+        break;
+
       case promptMessages.exit:
         exit();
         break;
@@ -82,6 +102,69 @@ async function prompt() {
   } while (answer !== promptMessages.exit);
 }
 
+// View Functions
+async function viewAllEmployees() {
+  const res = await db.viewAllEmployees();
+  console.table("", res);
+}
+
+async function viewEmployeesByDepartment() {
+  const departments = await db.viewAllDepartments();
+
+  const departmentList = departments.map(record => {
+    return record.name;
+  });
+  const answer = await inquirer.prompt({
+    name: "department",
+    type: "list",
+    message: "Which department are you interested in?",
+    choices: departmentList
+  });
+
+  const departmentRecord = departments.find(resultEntry => {
+    // console.log(answer.department === resultEntry.name);
+    return answer.department === resultEntry.name;
+  });
+  const departmentId = departmentRecord.id;
+
+  const res = await db.viewEmployeesByDepartment(departmentId);
+  console.table("", res);
+}
+
+async function viewEmployeesByRole() {
+  const roles = await db.viewAllRoles();
+
+  const roleList = roles.map(record => {
+    return record.title;
+  });
+
+  const answer = await inquirer.prompt({
+    name: "role",
+    type: "list",
+    message: "Which role are you interested in?",
+    choices: roleList
+  });
+
+  const roleRecord = roles.find(
+    resultEntry => resultEntry.title === answer.role
+  );
+  const roleId = roleRecord.id;
+
+  const res = await db.viewEmployeesByRole(roleId);
+  console.table("", res);
+}
+
+async function viewAllRoles() {
+  const res = await db.viewAllRoles();
+  console.table("", res);
+}
+
+async function viewAllDepartments() {
+  const res = await db.viewAllDepartments();
+  console.table("", res);
+}
+
+// Add Functions 
 async function addEmployee() {
   const roles = await db.findRoles();
 
@@ -141,21 +224,17 @@ async function addEmployee() {
   console.log(`You successfully added ${answer.firstName} to the database.`);
 }
 
-async function viewAllEmployees() {
-  const res = await db.viewAllEmployees();
-  console.table("", res);
-}
+async function addDepartment() {
+  const answer = await inquirer.prompt({
+    name: "department",
+    type: "input",
+    message: "What department would you like to add?"
+  });
 
-async function viewAllRoles() {
-  const res = await db.viewAllRoles();
-  console.table("", res);
-}
+  const res = await db.addDepartment(answer.department);
 
-async function viewAllDepartments() {
-  const res = await db.viewAllDepartments();
-  console.table("", res);
+  console.log(`Added ${answer.department} to the the database.`);
 }
-
 async function addRole() {
   const answer = await inquirer.prompt([
     {
@@ -174,18 +253,7 @@ async function addRole() {
   console.log(`Added ${answer.role} to the the database.`);
 }
 
-async function addDepartment() {
-  const answer = await inquirer.prompt({
-    name: "department",
-    type: "input",
-    message: "What department would you like to add?"
-  });
-
-  const res = await db.addDepartment(answer.department);
-
-  console.log(`Added ${answer.department} to the the database.`);
-}
-
+// Update Function(s)
 async function updateEmployeeRole() {
   const employees = await db.findEmployee();
 
@@ -214,42 +282,98 @@ async function updateEmployeeRole() {
     }
   ]);
 
-const employeeChoice = employees.find( 
-  resultEntry => answer.name === resultEntry.first_name + " " + resultEntry.last_name
-);
+  const employeeChoice = employees.find(
+    resultEntry =>
+      answer.name === resultEntry.first_name + " " + resultEntry.last_name
+  );
 
-const employeeId = employeeChoice.id;
+  const employeeId = employeeChoice.id;
 
+  const roleRecord = roles.find(
+    resultEntry => resultEntry.title === answer.role
+  );
+  const roleId = roleRecord.id;
 
-const roleRecord = roles.find(
-  resultEntry => resultEntry.title === answer.role
-);
-const roleId = roleRecord.id;
+  await db.updateEmployeeRole(roleId, employeeId);
 
-await db.updateEmployeeRole(roleId, employeeId);
-
-
-console.log(`You successfully updated ${answer.name}'s role in the database.`);
+  console.log(
+    `You successfully updated ${answer.name}'s role in the database.`
+  );
 }
 
- function exit() {
+// Delete Functions
+async function deleteEmployee() {
+  const employees = await db.findEmployee();
+
+  const employeesList = employees.map(record => {
+    return record.first_name.concat(" " + record.last_name);
+  });
+  const answer = await inquirer.prompt({
+    type: "list",
+    name: "employee",
+    message: "Which employee do you want to delete?",
+    choices: employeesList
+  });
+
+  const employeeChoice = employees.find(resultEntry => {
+    // console.log("answer.name: [" + answer.employee + "] === resultEntry.first_name + \" \" + resultEntry.last_name: [" + resultEntry.first_name + " " + resultEntry.last_name + "]");
+    return (
+      answer.employee === resultEntry.first_name + " " + resultEntry.last_name
+    );
+  });
+
+  const employeeId = employeeChoice.id;
+  await db.deleteEmployee(employeeId);
+  console.log(`Deleted ${answer.name} from the database.`);
+}
+
+async function deleteDepartment() {
+  const departments = await db.viewAllDepartments();
+
+  const departmentList = departments.map(record => {
+    return record.name;
+  });
+  const answer = await inquirer.prompt({
+    name: "department",
+    type: "list",
+    message: "Which department are you interested in?",
+    choices: departmentList
+  });
+
+  const departmentRecord = departments.find(resultEntry => {
+    return answer.department === resultEntry.name;
+  });
+  const departmentId = departmentRecord.id;
+
+  const res = await db.deleteDepartment(departmentId);
+  console.log(`Succesfully deleted ${answer.name} from the database.`);
+}
+
+async function deleteRole() {
+  const roles = await db.viewAllRoles();
+
+  const roleList = roles.map(record => {
+    return record.title;
+  });
+
+  const answer = await inquirer.prompt({
+    name: "role",
+    type: "list",
+    message: "Which role are you interested in?",
+    choices: roleList
+  });
+
+  const roleRecord = roles.find(
+    resultEntry => resultEntry.title === answer.role
+  );
+  const roleId = roleRecord.id;
+
+  const res = await db.deleteRole(roleId);
+  console.log(`Succesfully deleted ${answer.title} from the database.`);
+}
+
+function exit() {
   db.exit();
 }
-
-// async function deleteEmployee() {
-//   const employees = await db.findEmployee();
-
-//   const employeeList = employees.map(record => {
-//     return record.first_name.concat(" " + record.last_name);
-//   });
-//   const answer = await inquirer.prompt({
-//     name: "name",
-//     type: "list",
-//     choices: employeeList
-//   });
-
-//   const res = await db.deleteEmployee();
-//   console.log(`Deleted ${answer.name} from the database.`)
-// }
 
 prompt();
